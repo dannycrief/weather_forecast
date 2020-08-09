@@ -2,9 +2,11 @@ from datetime import datetime, timedelta
 from random import randint
 
 from flask import render_template, request, jsonify, redirect
-from app import app, db
-from app.forms import ForecastForm
-from app.models import Forecast
+from flask_login import login_user
+
+from app import app, db, login_manager, bcrypt
+from app.forms import ForecastForm, LoginForm, CreateUserForm
+from app.models import Forecast, User
 
 CITIES = ['Amsterdam', 'Warsaw']
 
@@ -92,3 +94,36 @@ def delete_forecast(_id):
     db.session.delete(forecast)
     db.commit()
     return jsonify({'result': True})
+
+
+@login_manager.user_loaded
+def user_loaded(user_id):
+    return User.query.get(user_id)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    form = LoginForm()
+    if form.validated_on_submit():
+        user = User.query.get(form.email.data)
+        if user:
+            if bcrypt.check_password_hash(user.password, form.password.data):
+                user.authenticated = True
+                db.session.add(user)
+                db.session.commit()
+                login_user(user, remember=True)
+                return redirect('/')
+    return render_template('login.html', form=form)
+
+
+@app.route('/create_user', methods=["GET", "POST"])
+def create_user():
+    form = CreateUserForm()
+    if form.validate_on_submit():
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User(email=email, password=bcrypt.generate_password_hash(password).decode('utf-8'))
+        db.session.add(user)
+        db.session.commit()
+        return redirect('/')
+    return render_template('login.html', form=form)
