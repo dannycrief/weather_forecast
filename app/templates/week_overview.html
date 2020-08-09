@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Weather for {{ city }}</title>
+</head>
+<body>
+<h1>Weather forecast for next week from {{ week.start }} to {{ week.end }}</h1>
+{% for day in week_weather %}
+    <div>
+        <p>{{ day }} temperature: <b>{{ week_weather[day] }}</b></p>
+    </div>
+{% endfor %}
+
+</body>
+</html>
